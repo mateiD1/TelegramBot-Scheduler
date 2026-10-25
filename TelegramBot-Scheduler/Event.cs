@@ -1,0 +1,127 @@
+﻿using System.Runtime.CompilerServices;
+using System.Text;
+
+namespace TelegramBot_Scheduler
+{
+    public struct Event(int id, string name, string description, TimeOnly time)
+    {
+        public int ID { get; } = id;
+        public string Name { get; set; } = name;
+        public string Description { get; set; } = description;
+        public TimeOnly Time { get; set; } = time;
+
+        public override string ToString() {
+            return $"{ID}|{Name}|{Description}|{Time}";
+        }
+
+        public static Event FormattedStringToEvent(string eventInfo) {
+            string[] info = eventInfo.Split('|');
+
+            return new Event(Convert.ToInt32(info[0]),
+                info[1],
+                info[2],
+                TimeOnly.Parse(info[3]));
+        }
+
+        public static string GetEvents(int count) {
+            TimeOnly currTime = TimeOnly.FromDateTime(DateTime.Now);
+            List<string> unparsedEvents = FileService.Read();
+
+            Event[] events = new Event[count];
+            int lastIndex = 0;
+
+            for (int i = 0; i < unparsedEvents.Count; i++)
+            {
+                Event e = Event.FormattedStringToEvent(unparsedEvents[i]);
+
+                if (e.Time > currTime) {
+                    events[lastIndex] = e;
+                    lastIndex++;
+                }
+
+                if (lastIndex == count)
+                    break;
+            }
+
+            // return all events as one string
+            StringBuilder eventsAsText = new();
+            foreach (var item in events) {
+                // meaning we reached the point of 'nulls'
+                string eventAsString = item.ToString();
+                if (eventAsString[0..eventAsString.IndexOf('|')] == "0")
+                    break;
+
+                eventsAsText.Append(item.ToString() + "\n");
+            }
+
+            return eventsAsText.ToString();
+        }
+
+        public static string ChangeEvent(string[] args) {
+            string eventID = args[1];
+
+            List<string> events = FileService.Read();
+
+            for (int i = 0; i < events.Count; i++) {
+                if (events[i][0..events[i].IndexOf('|')] == eventID) {
+                    Event newEvent = Event.FormattedStringToEvent(events[i]);
+                    newEvent.Name = args[2];
+                    newEvent.Description = args[3];
+
+                    events[i] = newEvent.ToString();
+                    break;
+                }
+            }
+
+            FileService.WriteToDayEventFile(events);
+
+            return "Updated Event successfully!";
+        }
+
+        public static string Redate(int id, TimeOnly time) {
+            List<string> events = FileService.Read();
+            bool found = false;
+
+            for (int i=0; i<events.Count; i++) {
+                if (Convert.ToInt32(events[i][0..events[i].IndexOf('|')]) == id) {
+                    found = true;
+
+                    Event currEvent = Event.FormattedStringToEvent(events[i]);
+                    currEvent.Time = time;
+                    events[i] = currEvent.ToString();
+
+                    if (currEvent.Time < TimeOnly.FromDateTime(DateTime.Now)) {
+                        Program._knownEvents.Remove(currEvent.ID);
+                    }
+
+                    if (i < events.Count-1) {
+                        Event nextEvent = Event.FormattedStringToEvent(events[i+1]);
+
+                        if (nextEvent.Time < currEvent.Time)
+                            updateComingEvents(i, currEvent.Time-nextEvent.Time);
+                    }
+                    break;
+                }
+            }
+
+            if (!found)
+                return "ID not found";
+
+            FileService.WriteToDayEventFile(events);
+            return "Redated succesfully";
+        }
+
+        private static void updateComingEvents(int i, TimeSpan difference) {
+            List<string> events = FileService.Read();
+
+            for (int j=i; j<events.Count; j++) {
+                Event currEvent = Event.FormattedStringToEvent(events[j]);
+                currEvent.Time.Add(difference);
+
+                if (currEvent.Time < TimeOnly.FromDateTime(DateTime.Now)) {
+                    Program._knownEvents.Remove(currEvent.ID);
+                }
+            }
+        }
+    }
+}
