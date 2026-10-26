@@ -1,4 +1,5 @@
-﻿using Telegram.Bot;
+﻿using System.Text;
+using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
@@ -13,8 +14,9 @@ namespace TelegramBot_Scheduler
 
                 return "'change' => change instance objective\n" +
                        "'list' => lists next x instances\n" +
-                       "'redate' => redate an instance" +
-                       "'save' => save something to remember later";
+                       "'redate' => redate an instance\n" +
+                       "'save' => save something to remember later\n" +
+                       "'todo' => shows the whole todo file";
             },
             ["redate"] = args => {
                 if (args.Length != 3)
@@ -45,10 +47,23 @@ namespace TelegramBot_Scheduler
                 return Event.ChangeEvent(args);
             },
             ["save"] = args => {
-                if (args.Length != 2)
-                    return "Follow command structure. Ex: save .Clean desk at 3 pm.";
+                if (args.Length < 2)
+                    return "Follow command structure. Ex: save Clean desk at 3 pm";
 
-                return FileService.WriteToToDoFile(args[2]);
+                StringBuilder sentence = new();
+                for (int i = 1; i < args.Length; i++)
+                {
+                    sentence.Append(args[i]+" ");
+                }
+                
+                return FileService.WriteToToDoFile(sentence.ToString());
+            },
+            ["todo"] = args =>
+            {
+                if (args.Length != 1)
+                    return "This command does not take arguments";
+                
+                return FileService.ReadFromToDoFile();
             }
         };
         public static async Task OnMessage(Message message, UpdateType type) {
@@ -58,21 +73,9 @@ namespace TelegramBot_Scheduler
             
             if (string.IsNullOrEmpty(message.Text))
                 return;
-
-            string[] args = new string[0];
-            if (message.Text.Contains(".")) {
-                int firstIndex = message.Text.IndexOf(".")+1;
-                int lastIndex = message.Text.LastIndexOf(".");
-                
-                args = new [] {message.Text.Split(' ')[0], message.Text[firstIndex..lastIndex]};
-            }
-            else {
-                args = message.Text.Split(' ');
-            }
             
-            if (args.Length == 0)
-                return;
-
+            string[] args = message.Text.Split(' ');
+            
             if (!_commands.ContainsKey(args[0]))
                 return;
 

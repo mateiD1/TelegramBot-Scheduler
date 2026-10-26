@@ -5,12 +5,12 @@ namespace TelegramBot_Scheduler
     internal class Program
     {
         public static TelegramBotClient bot = new(Info.API_KEY);
-        public static HashSet<int> _knownEvents = new HashSet<int>();
+        public static HashSet<int> _knownEvents = new();
 
         static async Task Main(string[] args)
         {
             bot.OnMessage += Answer.OnMessage;
-            Console.CancelKeyPress += (object? sender, ConsoleCancelEventArgs args) =>
+            Console.CancelKeyPress += (_, _) =>
             {
                 Environment.Exit(0);
             };

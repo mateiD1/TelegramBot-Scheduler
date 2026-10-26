@@ -46,8 +46,9 @@ namespace TelegramBot_Scheduler
             // return all events as one string
             StringBuilder eventsAsText = new();
             foreach (var item in events) {
-                // meaning we reached the point of 'nulls'
                 string eventAsString = item.ToString();
+                
+                // meaning we reached the point of 'nulls'
                 if (eventAsString[0..eventAsString.IndexOf('|')] == "0")
                     break;
 
@@ -73,7 +74,7 @@ namespace TelegramBot_Scheduler
                 }
             }
 
-            FileService.WriteToDayEventFile(events);
+            FileService.Write(events);
 
             return "Updated Event successfully!";
         }
@@ -89,11 +90,12 @@ namespace TelegramBot_Scheduler
                     Event currEvent = Event.FormattedStringToEvent(events[i]);
                     currEvent.Time = time;
                     events[i] = currEvent.ToString();
-
+                    
                     if (currEvent.Time < TimeOnly.FromDateTime(DateTime.Now)) {
                         Program._knownEvents.Remove(currEvent.ID);
                     }
-
+                    
+                    // check if we have to redate coming events so they do not overlap
                     if (i < events.Count-1) {
                         Event nextEvent = Event.FormattedStringToEvent(events[i+1]);
 
@@ -107,7 +109,7 @@ namespace TelegramBot_Scheduler
             if (!found)
                 return "ID not found";
 
-            FileService.WriteToDayEventFile(events);
+            FileService.Write(events);
             return "Redated succesfully";
         }
 
