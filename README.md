@@ -33,3 +33,7 @@
 13|Read|Read a book|18:15\
 14|Free|Free time|18:45\
 15|Sleep|Go get some sleep|22:00\
+
+## Future optimizations
+- When reading from file, only read as much as we need, not the whole file
+- Expanding todo command so it can also read lines, clear the file...
