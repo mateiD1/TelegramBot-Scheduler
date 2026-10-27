@@ -37,7 +37,7 @@ namespace TelegramBot_Scheduler
                 return Event.GetEvents(count);
             },
             ["change"] = args => {
-                if (args.Length != 4)
+                if (args.Length < 4)
                     return "Follow command structure. Ex: change 12 Reading Read new book";
                 if (!int.TryParse(args[1], out _))
                     return "Enter valid id";

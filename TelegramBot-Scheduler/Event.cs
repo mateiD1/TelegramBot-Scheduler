@@ -1,14 +1,13 @@
-﻿using System.Runtime.CompilerServices;
-using System.Text;
+﻿using System.Text;
 
 namespace TelegramBot_Scheduler
 {
     public struct Event(int id, string name, string description, TimeOnly time)
     {
         public int ID { get; } = id;
-        public string Name { get; set; } = name;
-        public string Description { get; set; } = description;
-        public TimeOnly Time { get; set; } = time;
+        public string Name { get; private set; } = name;
+        public string Description { get; private set; } = description;
+        public TimeOnly Time { get; private set; } = time;
 
         public override string ToString() {
             return $"{ID}|{Name}|{Description}|{Time}";
@@ -30,8 +29,7 @@ namespace TelegramBot_Scheduler
             Event[] events = new Event[count];
             int lastIndex = 0;
 
-            for (int i = 0; i < unparsedEvents.Count; i++)
-            {
+            for (int i = 0; i < unparsedEvents.Count; i++) {
                 Event e = Event.FormattedStringToEvent(unparsedEvents[i]);
 
                 if (e.Time > currTime) {
@@ -67,7 +65,12 @@ namespace TelegramBot_Scheduler
                 if (events[i][0..events[i].IndexOf('|')] == eventID) {
                     Event newEvent = Event.FormattedStringToEvent(events[i]);
                     newEvent.Name = args[2];
-                    newEvent.Description = args[3];
+                    
+                    StringBuilder newEventDescription = new();
+                    for (int j = 3; j < args.Length; j++) {
+                        newEventDescription.Append(args[j]+" ");
+                    }
+                    newEvent.Description = newEventDescription.ToString();
 
                     events[i] = newEvent.ToString();
                     break;

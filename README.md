@@ -33,6 +33,3 @@
 13|Read|Read a book|18:15\
 14|Free|Free time|18:45\
 15|Sleep|Go get some sleep|22:00\
-
-## Known bugs
-- change command
